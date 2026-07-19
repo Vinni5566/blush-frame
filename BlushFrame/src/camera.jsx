@@ -15,11 +15,31 @@ function Camera() {
 
   useEffect(() => {
     if (phase === "camera") {
-      navigator.mediaDevices.getUserMedia({ video: true })
-        .then(stream => {
-          if (videoRef.current) videoRef.current.srcObject = stream;
-        })
-        .catch(err => console.error("Camera access denied:", err));
+      const getMedia = async () => {
+        try {
+          if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            alert("Camera not supported on this device/browser. Please ensure you are using a secure connection (HTTPS) and a supported browser.");
+            return;
+          }
+          const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+          if (videoRef.current) {
+            videoRef.current.srcObject = stream;
+          }
+        } catch (err) {
+          console.error("Camera access denied:", err);
+          alert("Could not access the camera. Please allow camera permissions and try again.");
+        }
+      };
+      getMedia();
+
+      // Cleanup function to stop tracks when component unmounts or phase changes
+      return () => {
+        if (videoRef.current && videoRef.current.srcObject) {
+          const stream = videoRef.current.srcObject;
+          const tracks = stream.getTracks();
+          tracks.forEach(track => track.stop());
+        }
+      };
     }
   }, [phase]);
 
@@ -154,7 +174,7 @@ function Camera() {
   };
 
   return (
-    <div className=" fixed inset-0 overflow-hidden flex flex-col items-center gap-18 p-17 min-h-screen bg-gradient-to-br from-purple-100 to-pink-100">
+    <div className=" fixed inset-0 overflow-hidden flex flex-col items-center justify-center gap-6 p-4 min-h-screen bg-gradient-to-br from-purple-100 to-pink-100">
 
       <div className="absolute top-20 left-40 w-32 h-32 bg-pink-200 rounded-full opacity-60 animate-bounce"></div>
       <div className="absolute top-40 right-32 w-24 h-24 bg-purple-200 rounded-full opacity-40 animate-bounce"></div>
@@ -242,7 +262,7 @@ function Camera() {
             </div>
           </div>
 
-          <div className="flex justify-center gap-4 mb-0">
+          <div className="flex justify-center gap-4 mt-4">
             <button
                 onClick={() => setPhase("layout")}
                 className="px-6 py-3 bg-gray-500 text-white rounded-lg hover:bg-gray-600 font-semibold hover:scale-105 transition-transform"
@@ -250,15 +270,13 @@ function Camera() {
                 Back to Layouts
               </button>
             
-            {/* Preview Button */}
-            {photos.every(p => p !== null) && (
+            {/* Preview Button (space reserved to prevent layout shift) */}
             <button
               onClick={goToPreview}
-              className="px-6 py-3 bg-green-500 text-white rounded-lg shadow-lg hover:bg-green-600 font-semibold text-lg hover:scale-105 transition-transform"
+              className={`px-6 py-3 bg-green-500 text-white rounded-lg shadow-lg hover:bg-green-600 font-semibold text-lg hover:scale-105 transition-transform ${photos.every(p => p !== null) ? 'visible' : 'invisible'}`}
             >
               Preview Your Photos!
             </button>
-            )}
           </div>
         </>
       )}
