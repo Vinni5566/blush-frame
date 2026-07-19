@@ -21,13 +21,13 @@ function Camera() {
             alert("Camera not supported on this device/browser. Please ensure you are using a secure connection (HTTPS) and a supported browser.");
             return;
           }
-          const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+          const stream = await navigator.mediaDevices.getUserMedia({ video: true });
           if (videoRef.current) {
             videoRef.current.srcObject = stream;
           }
         } catch (err) {
           console.error("Camera access denied:", err);
-          alert("Could not access the camera. Please allow camera permissions and try again.");
+          alert(`Could not access the camera (${err.name}: ${err.message}). Make sure no other app (like Zoom/Teams) is using the camera, and try refreshing the page.`);
         }
       };
       getMedia();
